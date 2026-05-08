@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenEye Nazar — Doctor Report Reader</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Georgia, sans-serif;
+      background: #f5efe8;
+      min-height: 100vh;
+    }
+
+    /* NAVBAR */
+    .navbar {
+      background: #2c1a0e;
+      padding: 14px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-eye {
+      width: 36px; height: 36px;
+      background: #8b4513;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .brand-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: white;
+    }
+    .brand-name span { color: #c0784a; }
+    .nav-tag {
+      font-size: 11px;
+      color: #c0784a;
+      border: 1px solid #8b4513;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+    }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, #2c1a0e 0%, #5c2d0a 50%, #8b4513 100%);
+      padding: 50px 20px 60px;
+      text-align: center;
+      color: white;
+    }
+    .hero h1 { font-size: 2.4rem; font-weight: 700; margin-bottom: 10px; }
+    .hero h1 span { color: #e8b090; }
+    .hero p { font-size: 1rem; opacity: 0.8; margin-bottom: 25px; }
+
+    .features-bar {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .feat-pill {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+
+    /* MAIN CONTAINER */
+    .container {
+      max-width: 750px;
+      margin: -30px auto 40px;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 35px;
+      box-shadow: 0 8px 40px rgba(44,26,14,0.12);
+      margin-bottom: 20px;
+    }
+
+    /* LANGUAGE */
+    .section-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #5c2d0a;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e8d5c4;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #2c1a0e;
+      background: #fdf8f4;
+      outline: none;
+      margin-bottom: 22px;
+      cursor: pointer;
+    }
+    select:focus { border-color: #8b4513; }
+
+    /* TONE SELECTOR */
+    .tone-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+    .tone-btn {
+      padding: 10px 6px;
+      border: 2px solid #e8d5c4;
+      border-radius: 10px;
+      background: #fdf8f4;
+      color: #5c2d0a;
+      font-size: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .tone-btn.active {
+      border-color: #8b4513;
+      background: #8b4513;
+      color: white;
+    }
+    .tone-btn:hover { border-color: #8b4513; }
+
+    /* UPLOAD */
+    .upload-area {
+      border: 2.5px dashed #c0784a;
+      border-radius: 16px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      background: #fdf8f4;
+      transition: all 0.3s;
+      margin-bottom: 20px;
+    }
+    .upload-area:hover { background: #f5efe8; border-color: #8b4513; }
+    .upload-icon { font-size: 3rem; margin-bottom: 10px; }
+    .upload-area h3 { color: #2c1a0e; margin-bottom: 5px; font-size: 16px; }
+    .upload-area p { color: #8b6050; font-size: 13px; }
+    .file-badge {
+      display: inline-block;
+      margin-top: 10px;
+      background: #8b4513;
+      color: white;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+    input[type="file"] { display: none; }
+
+    /* DISCLAIMER TOGGLE */
+    .disclaimer-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: #fdf3ec;
+      border: 1px solid #e8d5c4;
+      border-radius: 10px;
+      padding: 12px 15px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #5c2d0a;
+    }
+    .disclaimer-check input { margin-top: 2px; accent-color: #8b4513; }
+
+    /* ANALYZE BUTTON */
+    .analyze-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #5c2d0a, #8b4513, #c0784a);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: opacity 0.3s;
+    }
+    .analyze-btn:hover { opacity: 0.92; }
+    .analyze-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* LOADING */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 40px;
+    }
+    .spinner {
+      width: 55px; height: 55px;
+      border: 4px solid #e8d5c4;
+      border-top: 4px solid #8b4513;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 18px;
+    }
+    .loading p { color: #5c2d0a; font-size: 15px; }
+    .loading small { color: #8b6050; font-size: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* RESULT */
+    .result-card {
+      display: none;
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 40px rgba(44,26,14,0.12);
+    }
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f5efe8;
+    }
+    .result-title { color: #2c1a0e; font-size: 18px; font-weight: 700; }
+    .result-actions { display: flex; gap: 8px; }
+    .action-btn {
+      padding: 8px 14px;
+      border: 1.5px solid #c0784a;
+      background: white;
+      color: #8b4513;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .action-btn:hover { background: #8b4513; color: white; }
+
+    /* RESULT STATS */
+    .result-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background: #fdf8f4;
+      border: 1px solid #e8d5c4;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+    .stat-box .num { font-size: 22px; font-weight: 700; color: #8b4513; }
+    .stat-box .lbl { font-size: 11px; color: #8b6050; margin-top: 2px; }
+
+    .result-text {
+      color: #2c1a0e;
+      line-height: 1.85;
+      white-space: pre-wrap;
+      font-size: 15px;
+      background: #fdf8f4;
+      border-radius: 12px;
+      padding: 20px;
+      border-left: 4px solid #8b4513;
+    }
+
+    /* RATING */
+    .rating-section {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .rating-section p { font-size: 13px; color: #8b6050; margin-bottom: 8px; }
+    .stars { display: flex; justify-content: center; gap: 8px; }
+    .star {
+      font-size: 28px;
+      cursor: pointer;
+      color: #e8d5c4;
+      transition: color 0.2s;
+    }
+    .star.active, .star:hover { color: #c0784a; }
+
+    .new-btn {
+      width: 100%;
+      margin-top: 20px;
+      padding: 13px;
+      background: white;
+      color: #8b4513;
+      border: 2px solid #8b4513;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .new-btn:hover { background: #fdf8f4; }
+
+    /* HISTORY SECTION */
+    .history-card {
+      background: white;
+      border-radius: 20px;
+      padding: 25px 35px;
+      box-shadow: 0 8px 40px rgba(44,26,14,0.08);
+      margin-bottom: 20px;
+    }
+    .history-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #2c1a0e;
+      margin-bottom: 15px;
+    }
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f5efe8;
+      font-size: 13px;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-name { color: #2c1a0e; font-weight: 600; }
+    .history-time { color: #8b6050; }
+    .history-view {
+      color: #8b4513;
+      cursor: pointer;
+      font-size: 12px;
+      text-decoration: underline;
+    }
+
+    /* FOOTER */
+    .footer {
+      background: #2c1a0e;
+      color: rgba(255,255,255,0.6);
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      line-height: 2;
+    }
+    .footer strong { color: #c0784a; }
+
+    /* WARNING BANNER */
+    .warning-banner {
+      background: #fff8f0;
+      border: 1px solid #e8d5c4;
+      border-radius: 10px;
+      padding: 10px 15px;
+      font-size: 12px;
+      color: #8b6050;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="brand">
+      <div class="brand-eye">👁️</div>
+      <div class="brand-name">Open<span>Eye</span> Nazar</div>
+    </div>
+    <div class="nav-tag">AI HEALTH TECH</div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>Doctor Report <span>Reader</span></h1>
+    <p>Upload any medical report — AI explains it in simple words, in your language</p>
+    <div class="features-bar">
+      <span class="feat-pill">📄 PDF Support</span>
+      <span class="feat-pill">🌍 15 Languages</span>
+      <span class="feat-pill">⚡ Instant Analysis</span>
+      <span class="feat-pill">🔒 Private & Secure</span>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- MAIN CARD -->
+    <div class="card" id="mainCard">
+
+      <!-- Language -->
+      <span class="section-label">🌍 Select Language</span>
+      <select id="langSelect">
+        <option value="English">🇬🇧 English</option>
+        <option value="Urdu">🇵🇰 اردو Urdu</option>
+        <option value="Arabic">🇸🇦 العربية Arabic</option>
+        <option value="Hindi">🇮🇳 हिंदी Hindi</option>
+        <option value="French">🇫🇷 Français French</option>
+        <option value="Spanish">🇪🇸 Español Spanish</option>
+        <option value="German">🇩🇪 Deutsch German</option>
+        <option value="Chinese">🇨🇳 中文 Chinese</option>
+        <option value="Turkish">🇹🇷 Türkçe Turkish</option>
+        <option value="Russian">🇷🇺 Русский Russian</option>
+        <option value="Bengali">🇧🇩 বাংলা Bengali</option>
+        <option value="Persian">🇮🇷 فارسی Persian</option>
+        <option value="Pashto">🇦🇫 پښتو Pashto</option>
+        <option value="Portuguese">🇧🇷 Português Portuguese</option>
+        <option value="Italian">🇮🇹 Italiano Italian</option>
+      </select>
+
+      <!-- Explanation Tone -->
+      <span class="section-label">🎯 Explanation Style</span>
+      <div class="tone-grid">
+        <button class="tone-btn active" onclick="setTone(this,'simple')">😊 Very Simple<br><small>For patients</small></button>
+        <button class="tone-btn" onclick="setTone(this,'detailed')">📋 Detailed<br><small>More info</small></button>
+        <button class="tone-btn" onclick="setTone(this,'medical')">🩺 Medical<br><small>For doctors</small></button>
+      </div>
+
+      <!-- Upload -->
+      <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📄</div>
+        <h3>Click to upload your PDF report</h3>
+        <p>Blood tests, lab reports, doctor prescriptions</p>
+        <div id="fileName"></div>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf" onchange="showFileName()">
+
+      <!-- Disclaimer checkbox -->
+      <div class="disclaimer-check">
+        <input type="checkbox" id="agreeCheck">
+        <label for="agreeCheck">I understand this is for informational purposes only and I will consult my doctor for medical decisions.</label>
+      </div>
+
+      <button class="analyze-btn" onclick="analyzeReport()" id="analyzeBtn">
+        👁️ Analyze Report
+      </button>
+
+    </div>
+
+    <!-- LOADING -->
+    <div class="loading" id="loading">
+      <div style="background:white; border-radius:20px; padding:40px; box-shadow:0 8px 40px rgba(44,26,14,0.12);">
+        <div class="spinner"></div>
+        <p>AI is reading your report...</p>
+        <small>This may take 10-20 seconds</small>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="result-card" id="resultCard">
+      <div class="result-header">
+        <div class="result-title">📋 Report Analysis</div>
+        <div class="result-actions">
+          <button class="action-btn" onclick="copyResult()">📋 Copy</button>
+          <button class="action-btn" onclick="printResult()">🖨️ Print</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="result-stats">
+        <div class="stat-box">
+          <div class="num" id="wordCount">0</div>
+          <div class="lbl">Words in explanation</div>
+        </div>
+        <div class="stat-box">
+          <div class="num" id="langUsed">EN</div>
+          <div class="lbl">Language used</div>
+        </div>
+        <div class="stat-box">
+          <div class="num" id="timeUsed">0s</div>
+          <div class="lbl">Time taken</div>
+        </div>
+      </div>
+
+      <!-- Warning -->
+      <div class="warning-banner">
+        ⚠️ <span>This is an AI-generated explanation. Always consult your doctor before making any medical decisions.</span>
+      </div>
+
+      <div class="result-text" id="resultText"></div>
+
+      <!-- Rating -->
+      <div class="rating-section">
+        <p>Was this explanation helpful?</p>
+        <div class="stars">
+          <span class="star" onclick="rate(1)">★</span>
+          <span class="star" onclick="rate(2)">★</span>
+          <span class="star" onclick="rate(3)">★</span>
+          <span class="star" onclick="rate(4)">★</span>
+          <span class="star" onclick="rate(5)">★</span>
+        </div>
+      </div>
+
+      <button class="new-btn" onclick="resetApp()">🔄 Analyze Another Report</button>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="history-card" id="historyCard" style="display:none;">
+      <div class="history-title">🕐 Recent Reports</div>
+      <div id="historyList"></div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div>© 2026 <strong>OpenEye Nazar</strong> — AI Health Technology</div>
+    <div>Developed by <strong>Rana Abdul Wahab Nazar</strong></div>
+    <div>For informational purposes only · Always consult your doctor</div>
+  </div>
+
+  <script>
+    let currentTone = 'simple';
+    let startTime = null;
+    let history = JSON.parse(localStorage.getItem('reportHistory') || '[]');
+
+    function setTone(btn, tone) {
+      document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTone = tone;
+    }
+
+    function showFileName() {
+      const file = document.getElementById('fileInput').files[0];
+      const el = document.getElementById('fileName');
+      el.innerHTML = file ? `<span class="file-badge">✅ ${file.name}</span>` : '';
+    }
+
+    async function analyzeReport() {
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) { alert('Please select a PDF file first!'); return; }
+
+      const agreed = document.getElementById('agreeCheck').checked;
+      if (!agreed) { alert('Please agree to the disclaimer first.'); return; }
+
+      startTime = Date.now();
+      document.getElementById('analyzeBtn').disabled = true;
+      document.getElementById('mainCard').style.display = 'none';
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('resultCard').style.display = 'none';
+
+      const lang = document.getElementById('langSelect').value;
+
+      const toneInstructions = {
+        simple: 'Use very simple words that any patient can understand. Avoid medical jargon.',
+        detailed: 'Give a detailed explanation with all important values and what each means.',
+        medical: 'Use proper medical terminology suitable for healthcare professionals.'
+      };
+
+      const formData = new FormData();
+      formData.append('report', file);
+      formData.append('lang', lang);
+      formData.append('tone', toneInstructions[currentTone]);
+
+      try {
+        const response = await fetch('/analyze', { method: 'POST', body: formData });
+        const data = await response.json();
+        const elapsed = Math.round((Date.now() - startTime) / 1000);
+
+        document.getElementById('loading').style.display = 'none';
+
+        if (data.success) {
+          const words = data.explanation.split(' ').length;
+          document.getElementById('wordCount').textContent = words;
+          document.getElementById('langUsed').textContent = lang.substring(0,2).toUpperCase();
+          document.getElementById('timeUsed').textContent = elapsed + 's';
+          document.getElementById('resultText').textContent = data.explanation;
+          document.getElementById('resultCard').style.display = 'block';
+
+          // Save to history
+          history.unshift({ name: file.name, lang, time: new Date().toLocaleTimeString(), result: data.explanation });
+          if (history.length > 5) history.pop();
+          localStorage.setItem('reportHistory', JSON.stringify(history));
+          renderHistory();
+        } else {
+          document.getElementById('mainCard').style.display = 'block';
+          document.getElementById('analyzeBtn').disabled = false;
+          alert('❌ Error: ' + data.error);
+        }
+      } catch(err) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('mainCard').style.display = 'block';
+        document.getElementById('analyzeBtn').disabled = false;
+        alert('Something went wrong!');
+      }
+    }
+
+    function copyResult() {
+      navigator.clipboard.writeText(document.getElementById('resultText').textContent);
+      const btn = document.querySelectorAll('.action-btn')[0];
+      btn.textContent = '✅ Copied!';
+      setTimeout(() => btn.textContent = '📋 Copy', 2000);
+    }
+
+    function printResult() {
+      window.print();
+    }
+
+    function rate(n) {
+      document.querySelectorAll('.star').forEach((s, i) => {
+        s.classList.toggle('active', i < n);
+      });
+    }
+
+    function resetApp() {
+      document.getElementById('mainCard').style.display = 'block';
+      document.getElementById('resultCard').style.display = 'none';
+      document.getElementById('fileInput').value = '';
+      document.getElementById('fileName').innerHTML = '';
+      document.getElementById('analyzeBtn').disabled = false;
+      document.getElementById('agreeCheck').checked = false;
+    }
+
+    function renderHistory() {
+      if (history.length === 0) return;
+      document.getElementById('historyCard').style.display = 'block';
+      document.getElementById('historyList').innerHTML = history.map((h, i) => `
+        <div class="history-item">
+          <div>
+            <div class="history-name">📄 ${h.name}</div>
+            <div class="history-time">${h.lang} · ${h.time}</div>
+          </div>
+          <span class="history-view" onclick="viewHistory(${i})">View</span>
+        </div>
+      `).join('');
+    }
+
+    function viewHistory(i) {
+      document.getElementById('mainCard').style.display = 'none';
+      document.getElementById('resultText').textContent = history[i].result;
+      document.getElementById('wordCount').textContent = history[i].result.split(' ').length;
+      document.getElementById('langUsed').textContent = history[i].lang.substring(0,2).toUpperCase();
+      document.getElementById('timeUsed').textContent = '-';
+      document.getElementById('resultCard').style.display = 'block';
+      window.scrollTo(0, 0);
+    }
+
+    renderHistory();
+  </script>
+
+</body>
+</html>
