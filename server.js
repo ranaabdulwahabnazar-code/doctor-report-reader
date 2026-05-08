@@ -4,6 +4,13 @@ const fs = require('fs');
 const https = require('https');
 require('dotenv').config();
 
+const { createClient } = require('@supabase/supabase-js');
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
+
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
@@ -25,6 +32,7 @@ app.post('/analyze', upload.single('report'), async (req, res) => {
         ).join('\n');
         resolve(text);
       });
+
       pdfParser.on('pdfParser_dataError', reject);
       pdfParser.loadPDF(req.file.path);
     });
@@ -62,11 +70,17 @@ app.post('/analyze', upload.single('report'), async (req, res) => {
 
       const req2 = https.request(options, (res2) => {
         let data = '';
-        res2.on('data', (chunk) => { data += chunk; });
+
+        res2.on('data', (chunk) => {
+          data += chunk;
+        });
+
         res2.on('end', () => {
           try {
             const parsed = JSON.parse(data);
+
             console.log('Groq jawab mila!');
+
             if (parsed.error) {
               reject(new Error('Groq Error: ' + parsed.error.message));
             } else if (!parsed.choices || parsed.choices.length === 0) {
@@ -74,6 +88,7 @@ app.post('/analyze', upload.single('report'), async (req, res) => {
             } else {
               resolve(parsed.choices[0].message.content);
             }
+
           } catch(e) {
             reject(new Error('Parse error: ' + e.message));
           }
@@ -85,12 +100,26 @@ app.post('/analyze', upload.single('report'), async (req, res) => {
       req2.end();
     });
 
+    await supabase.from('reports').insert({
+      file_name: req.file.originalname,
+      language: selectedLang,
+      result: explanation
+    });
+
     fs.unlinkSync(req.file.path);
-    res.json({ success: true, explanation });
+
+    res.json({
+      success: true,
+      explanation
+    });
 
   } catch (error) {
     console.log('ERROR:', error.message);
-    res.json({ success: false, error: error.message });
+
+    res.json({
+      success: false,
+      error: error.message
+    });
   }
 });
 
